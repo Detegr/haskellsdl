@@ -53,17 +53,17 @@ loop g s = do state <- pollEvents s
 
 pollEvents :: GameState -> IO GameState
 pollEvents g = pollEvent >>= \e -> 
-               case e of Quit      -> return (GameState (player g) zeroKeys True)
-                         KeyDown k -> setKey k True g
-                         KeyUp   k -> setKey k False g
-                         _         -> tick g
+               case e of Quit      -> return $ (GameState (player g) zeroKeys True)
+                         KeyDown k -> return $ setKey k True g
+                         KeyUp   k -> return $ setKey k False g
+                         _         -> return $ tick g
 
-setKey :: Keysym -> Bool -> GameState -> IO GameState
-setKey (Keysym k _ _) b g = case k of SDLK_UP    -> return $ mkSt (player g) (KeyState b d l r)
-                                      SDLK_DOWN  -> return $ mkSt (player g) (KeyState u b l r)
-                                      SDLK_LEFT  -> return $ mkSt (player g) (KeyState u d b r)
-                                      SDLK_RIGHT -> return $ mkSt (player g) (KeyState u d l b)
-                                      _          -> return g
+setKey :: Keysym -> Bool -> GameState -> GameState
+setKey (Keysym k _ _) b g = case k of SDLK_UP    -> mkSt (player g) (KeyState b d l r)
+                                      SDLK_DOWN  -> mkSt (player g) (KeyState u b l r)
+                                      SDLK_LEFT  -> mkSt (player g) (KeyState u d b r)
+                                      SDLK_RIGHT -> mkSt (player g) (KeyState u d l b)
+                                      _          -> g
                           where (KeyState u d l r) = keys g
 
 movePlayer :: KeyState -> Player -> Player
@@ -78,8 +78,8 @@ movePlayer (KeyState u d l r) (Player x y)
     | r      = Player (x+1) y
     | otherwise = Player x y
 
-tick :: GameState -> IO GameState
-tick g = return $ GameState (movePlayer (keys g) (player g)) (keys g) False
+tick :: GameState -> GameState
+tick g = GameState (movePlayer (keys g) (player g)) (keys g) False
 
 initData :: IO GameData
 initData = do screen <- setVideoMode 800 600 32 [SWSurface]
